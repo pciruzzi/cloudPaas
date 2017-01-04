@@ -7,10 +7,10 @@ def index(request):
 	context = {}
 	return render(request, 'containers/index.html', context)
 
-
-
+@login_required
 def create(request):
 	return HttpResponse("This will be the create a containers view")
 
+@login_required
 def run(request,container_id):
 	return HttpResponse("This view will run the container #" + container_id)
