@@ -1,8 +1,13 @@
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.shortcuts import render
 
+@login_required
 def index(request):
-	return HttpResponse("This will show the list of containers")
+	context = {}
+	return render(request, 'containers/index.html', context)
+
+
 
 def create(request):
 	return HttpResponse("This will be the create a containers view")
