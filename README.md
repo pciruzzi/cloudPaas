@@ -22,6 +22,10 @@ Name -> cloud_pass
 UserName -> insa
 Password -> insa
 
+# Install the database dependencies
+sudo apt-get install libmysqlclient-dev
+pip3 install mysqlclient
+
 # Run the application
 python3 manage.py runserver
 
