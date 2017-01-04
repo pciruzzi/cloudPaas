@@ -32,3 +32,9 @@ python3 manage.py runserver
 # Save modifications made to a model
 python3 manage.py makemigrations
 python3 manage.py migrate
+
+# Create superuser
+python3 manage.py createsuperuser
+admin
+admin@test.com
+adminadmin
