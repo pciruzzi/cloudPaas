@@ -3,8 +3,14 @@
 {% block content %}
 
   <form method="post" action="{% url 'create'%}">
-    <input type="" name="">
-  
+    <input type="text" name="containerName">
+    <select name="containerType">
+    	<option>C development</option>
+    	<option>Java development</option>
+    	<option>Big data development</option>
+    	<option>Web development</option>
+    </select>
+  	<input type="submit" value="create">
   </form>
 
 {% endblock %}
