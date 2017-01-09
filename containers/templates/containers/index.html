@@ -3,9 +3,30 @@
 {% block content %}
 	This will show the list of containers
 	<br>
-	{% for c in containers %}
-    {{ c.containerName }}
-	{% endfor %}
+	<table style="border: 1px solid black">
+		<tr>
+			<th>Container id</th>
+			<th>Container Name</th>
+			<th>Container Type</th>
+			<th>Container state</th>
+		</tr>
+		{% for c in containers %}
+		<tr>
+			<form method="post" action="{% url 'change' %}">
+				<td>{{ c.id }}</td>
+				<td>{{ c.containerType }}</td>
+				<td>{{ c.containerName }}</td>
+				<td>{{ c.currentState }}</td>
+				<td></td>
+			</form>
+			
+		</tr>
+		{% endfor %}
+	</table>
+	
+    
+    <br>
+	
 	<br>
 	<a href="{% url 'create' %}">Create a container</a>
 

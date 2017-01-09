@@ -9,10 +9,18 @@ from containers.models import Container
 @login_required
 def index(request):
 	context = {}
+	current_user = request.user
+	print("The current user is: ")
+	print(current_user.id)
+	#context = RequestContext(request)
 	print("In the index")
-	containers = Container.objects.all()
+	containers = Container.objects.filter(user = current_user)
+	#containers = Container.objects.all()
+	
 	for c in containers:
 		print(c.containerName)
+	#user = context['user']
+	print(current_user)
 	context = {'containers':containers}
 	return render(request, 'containers/index.html', context)
 
@@ -34,7 +42,19 @@ def create(request):
 
 @csrf_exempt
 @login_required
+def change(request):
+	context = {}
+	if request.method == 'GET':
+		return render(request, 'containers/index.html', context)
+
+	elif request.method == 'POST':
+		return render(request, 'containers/index.html', context)
+
+
+@csrf_exempt
+@login_required
 def run(request,container_id):
+	print
 	context = {}
 	if request.method == 'POST':
 		container = Container.objects.get(id=container_id)
