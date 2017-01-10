@@ -12,13 +12,11 @@
 		</tr>
 		{% for c in containers %}
 		<tr>
-			<form method="post" action="{% url 'change' %}">
 				<td>{{ c.id }}</td>
 				<td>{{ c.containerType }}</td>
 				<td>{{ c.containerName }}</td>
 				<td>{{ c.currentState }}</td>
 				<td></td>
-			</form>
 			
 		</tr>
 		{% endfor %}
