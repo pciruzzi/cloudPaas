@@ -38,3 +38,5 @@ python3 manage.py createsuperuser
 admin
 admin@test.com
 adminadmin
+
+python3-pip
