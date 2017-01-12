@@ -5,6 +5,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from containers.models import Container
 
+import requests
+import json
+import sys
+import subprocess
+
 @csrf_exempt
 @login_required
 def index(request):
@@ -27,10 +32,25 @@ def index(request):
 @csrf_exempt
 @login_required
 def create(request):
+	BASE = "http://192.168.0.3:8083/"
+	global V1
+	V1 = BASE + "v1/"
+	global V2_BETA
+	V2_BETA = BASE + "v2-beta/"
+
+	global HOSTS
+	HOSTS = V1 + "hosts"
+	global CONTAINERS
+	CONTAINERS = V2_BETA + "projects/1a5/containers"
 
 	context = {}
 
 	if request.method == 'GET':
+		data = '{"description":"Une description", "imageUuid":"docker:pciruzzi/paasinsa1617", "name":"api-test", "ports":["8094:3000/tcp"], "requestedHostId":"1h5"}'
+		response = requests.post(CONTAINERS, auth=(rancherUser, rancherPassword), data=data)
+		print(response.status_code)
+		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', '8094', '-j', 'DNAT', '--to-destination', '192.168.0.1:8094'])
+		subprocess.Popen(['iptables-save'])
 		return render(request, 'containers/create.html', context)
 
 	elif request.method == 'POST':
