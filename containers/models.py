@@ -11,6 +11,7 @@ class Container(models.Model):
 	ram = models.DecimalField(max_digits=10, decimal_places=2, default=-1
 		, blank=True, null=True)
 	creationDate = models.DateField(auto_now_add=True)
+	lastBackUp = models.DateTimeField(auto_now= True)
 	currentServer = models.IntegerField(default=-1
 		, blank=True, null=True)
 	containerType = models.CharField(max_length=250)

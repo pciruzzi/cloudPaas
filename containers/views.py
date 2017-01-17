@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from containers.models import Container
+from django.contrib.auth.models import User
 
 import requests
 import json
@@ -11,26 +12,51 @@ import sys
 import subprocess
 
 @csrf_exempt
-@login_required
+#@login_required
 def index(request):
-	context = {}
-	current_user = request.user
-	print("The current user is: ")
-	print(current_user.id)
-	#context = RequestContext(request)
-	print("In the index")
-	containers = Container.objects.filter(user = current_user)
-	#containers = Container.objects.all()
-	
-	for c in containers:
-		print(c.containerName)
-	#user = context['user']
-	print(current_user)
-	context = {'containers':containers}
-	return render(request, 'containers/index.html', context)
+	if request.method == 'GET':
+		context = {}
+		current_user = request.user
+		print("The current user is: ")
+		print(current_user.id)
+		print("In the index")
+		containers = Container.objects.filter(user_id = current_user.id)
+		for c in containers:
+			print(c.containerName)
+		context = {'containers':containers}
+		return render(request, 'containers/index.html', context)
+	elif request.method == 'POST':
+		print("lsdkfjmqsdklfjsmdlfk")
+		receivedData = json.loads(request.body.decode("utf-8"))
+		username = receivedData["username"]
+		#username = request.POST["username"]
+		print(username)
+		user = User.objects.get(username = username)
+		containers = Container.objects.filter(user_id = user.id)
+		print(containers)
+		
+		response = {}
+		containersJson = []
+
+		for c in containers:
+			actualContainer = {
+				'id' : c.id,
+				'name' : c.containerName,
+				'type' : c.containerType,
+				'state' : c.currentState,
+			}
+			print(actualContainer)
+			containersJson.append(actualContainer)
+			#response[c.id] = actualContainer
+
+		response = JsonResponse(containersJson, safe = False)
+		print(response)
+
+		#print(containersJson)
+		return (response)
 
 @csrf_exempt
-@login_required
+#@login_required
 def create(request):
 	BASE = "http://192.168.0.3:8083/"
 	global V1
@@ -55,37 +81,95 @@ def create(request):
 
 	elif request.method == 'POST':
 		print("This is a POST")
-		container = Container(user=request.user, containerType=request.POST['containerType'], 
-			containerName=request.POST['containerName'])
+		receivedData = json.loads(request.body.decode("utf-8"))
+		username = receivedData["username"]
+		print(username)
+		containerType = receivedData["type"]
+		containerName = receivedData["name"]
+		print("before user get")
+		user = User.objects.get(username = username)
+		print(user)
+		container = Container(user_id=user.id, containerType=containerType, 
+			containerName=containerName)
 		container.save()
-		return render(request,'containers/index.html',context)
+		jsonMessage = {
+				'message' : '1'
+			}
+		return JsonResponse(jsonMessage)
 
 @csrf_exempt
-@login_required
+#@login_required
 def change(request):
+	print("in colkjd")
 	context = {}
 	if request.method == 'GET':
 		return render(request, 'containers/index.html', context)
 
 	elif request.method == 'POST':
-		return render(request, 'containers/index.html', context)
+		#print("post")
+		receivedData = json.loads(request.body.decode("utf-8"))
+		username = receivedData["username"]
+		container_id = receivedData["containerId"]
+		user = User.objects.get(username = username)
+		#print(user.id)
+		container = Container.objects.get(user_id = user.id, id = container_id)
+		#print(container_id)
+		if (container.currentState == 0):
+			container.currentState = 1
+			container.save()
+			jsonMessage = {
+				'message' : '1'
+			}
+		elif (container.currentState == 1):
+			container.currentState = 0
+			container.save()
+			jsonMessage = {
+				'message' : '1'
+			}
+		else:
+			jsonMessage = {
+				'message' : '-1'
+			}
+		response = JsonResponse(jsonMessage, safe = False)
+		return response
+		#return render(request, 'containers/index.html', context)
 
 
 @csrf_exempt
-@login_required
-def run(request,container_id):
-	print
+#@login_required
+def backup(request):
 	context = {}
 	if request.method == 'POST':
-		container = Container.objects.get(id=container_id)
-	return render(request, 'containers/run.html', context)
-
-@csrf_exempt
-@login_required
-def stop(request, container_id):
-	context = {}
-	if request.method == 'POST':
-		container = Container.objects.get(id=container_id)
-		container.value = 0
+		print("post")
+		receivedData = json.loads(request.body.decode("utf-8"))
+		username = receivedData["username"]
+		container_id = receivedData["containerId"]
+		user = User.objects.get(username = username)
+		container = Container.objects.get(user_id = user.id, id = container_id)
+		print("after json get")
+		#now = datetime.datetime.now()
+		#print(now)
 		container.save()
-		return render(request, 'containers/stop.html')
+		jsonMessage = {
+				'message' : '1',
+				'backupTime' : container.lastBackUp
+			}
+		return JsonResponse(jsonMessage)
+
+
+@csrf_exempt
+#@login_required
+def delete(request):
+	print("in delete")
+	context = {}
+	if request.method == 'POST':
+		print("post")
+		receivedData = json.loads(request.body.decode("utf-8"))
+		username = receivedData["username"]
+		container_id = receivedData["containerId"]
+		user = User.objects.get(username = username)
+		container = Container.objects.filter(user_id = user.id, id = container_id).delete()
+		jsonMessage = {
+				'message' : '1'
+			}
+		return JsonResponse(jsonMessage)
