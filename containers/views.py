@@ -89,7 +89,7 @@ def create(request):
 		print(response.status_code)
 
 		# Container creation
-		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '"}'
+		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test' + str(port) + '", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '", "dataVolumes":["' + volumeName + ':/datas"]}'
 		response = requests.post(CONTAINERS, auth=(RANCHER_USER, RANCHER_PASS), data=data)
 		print(response.status_code)
 		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', str(port), '-j', 'DNAT', '--to-destination', '192.168.0.1:' + str(port)])
