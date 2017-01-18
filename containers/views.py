@@ -68,14 +68,31 @@ def create(request):
 	HOSTS = V1 + "hosts"
 	global CONTAINERS
 	CONTAINERS = V2_BETA + "projects/1a5/containers"
+	global VOLUMES
+	VOLUMES = V2_BETA + "projects/1a5/volumes"
+
+	global RANCHER_USER
+	RANCHER_USER = "" # FILL ME
+	RANCHER_PASS = ""
 
 	context = {}
 
 	if request.method == 'GET':
-		data = '{"description":"Une description", "imageUuid":"docker:pciruzzi/paasinsa1617", "name":"api-test", "ports":["8094:3000/tcp"], "requestedHostId":"1h5"}'
-		response = requests.post(CONTAINERS, auth=(rancherUser, rancherPassword), data=data)
+		port = 8094
+		volumeName = "VolumeApi" + str(port)
+		requestedHost = "1h5"
+		imageId = "pciruzzi/paasinsa1617"
+
+		# Volume creation
+		data = '{"description":"Description :)", "driver":"rancher-nfs", "name":"' + volumeName + '", "driverOpts": { }}'
+		response = requests.post(VOLUMES, auth=(RANCHER_USER, RANCHER_PASS), data=data)
 		print(response.status_code)
-		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', '8094', '-j', 'DNAT', '--to-destination', '192.168.0.1:8094'])
+
+		# Container creation
+		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '"}'
+		response = requests.post(CONTAINERS, auth=(RANCHER_USER, RANCHER_PASS), data=data)
+		print(response.status_code)
+		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', str(port), '-j', 'DNAT', '--to-destination', '192.168.0.1:' + str(port)])
 		subprocess.Popen(['iptables-save'])
 		return render(request, 'containers/create.html', context)
 
