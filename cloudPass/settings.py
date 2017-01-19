@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_cron',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -124,3 +125,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 LOGIN_URL = '/authentication/login/'
+
+CRON_CLASSES = [
+    "containers.cron.Monitoring",
+]
+
+CRONJOBS = [
+    ('*/5 * * * *', 'containers.Monitoring.Monitoring')
+]
