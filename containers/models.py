@@ -15,6 +15,8 @@ class Container(models.Model):
 	currentServer = models.IntegerField(default=-1
 		, blank=True, null=True)
 	containerType = models.CharField(max_length=250)
-	currentState = models.IntegerField(default=0)
+	currentState = models.IntegerField(default=1)
 	containerName = models.CharField(max_length=250, default='Container')
 	containerAddress = models.CharField(max_length=250, default='test')
+	rancherId = models.CharField(max_length=50, default='')
+	volumeId = models.CharField(max_length=50, default='')

@@ -1,0 +1,10 @@
+{% extends 'containers/base.html' %} 
+
+{% block content %}
+
+  <form method="post" action="{% url 'change'%}">
+    <input type="text" name="containerId">
+  	<input type="submit" value="change">
+  </form>
+
+{% endblock %}

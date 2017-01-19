@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_cron',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -133,3 +132,16 @@ CRON_CLASSES = [
 CRONJOBS = [
     ('*/5 * * * *', 'containers.Monitoring.Monitoring')
 ]
+
+
+
+BASE = "http://192.168.0.3:8083/"
+V1 = BASE + "v1/"
+V2_BETA = BASE + "v2-beta/"
+
+HOSTS = V1 + "hosts"
+CONTAINERS = V2_BETA + "projects/1a5/containers"
+VOLUMES = V2_BETA + "projects/1a5/volumes"
+
+RANCHER_USER = "" # FILL ME
+RANCHER_PASS = ""

@@ -5,11 +5,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from containers.models import Container
 from django.contrib.auth.models import User
+from django.conf import settings
 
 import requests
 import json
 import sys
 import subprocess
+import hashlib
 
 @csrf_exempt
 #@login_required
@@ -58,23 +60,6 @@ def index(request):
 @csrf_exempt
 #@login_required
 def create(request):
-	BASE = "http://192.168.0.3:8083/"
-	global V1
-	V1 = BASE + "v1/"
-	global V2_BETA
-	V2_BETA = BASE + "v2-beta/"
-
-	global HOSTS
-	HOSTS = V1 + "hosts"
-	global CONTAINERS
-	CONTAINERS = V2_BETA + "projects/1a5/containers"
-	global VOLUMES
-	VOLUMES = V2_BETA + "projects/1a5/volumes"
-
-	global RANCHER_USER
-	RANCHER_USER = "" # FILL ME
-	RANCHER_PASS = ""
-
 	context = {}
 
 	if request.method == 'GET':
@@ -94,9 +79,6 @@ def create(request):
 		container = Container(user_id=user.id, containerType=containerType, 
 			containerName=containerName)
 		container.save()
-		jsonMessage = {
-				'message' : '1'
-			}
 
 
 		port = 8090 + container.id
@@ -104,15 +86,29 @@ def create(request):
 		requestedHost = "1h5"
 		imageId = "pciruzzi/paasinsa1617"
 
+		hash_object = hashlib.sha1(str(port))
+		containerPassword = hash_object.hexdigest()
+		containerPassword = containerPassword[:8]
+
+		jsonMessage = {
+				'message' : '1',
+				'password' : containerPassword
+			}
+
 		# Volume creation
 		data = '{"description":"Description :)", "driver":"rancher-nfs", "name":"' + volumeName + '", "driverOpts": { }}'
-		response = requests.post(VOLUMES, auth=(RANCHER_USER, RANCHER_PASS), data=data)
+		response = requests.post(settings.VOLUMES, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
+		jsonResponse = response.json()
+		container.volumeId = jsonResponse["id"]
 		print(response.status_code)
 
 		# Container creation
-		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test' + str(port) + '", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '", "dataVolumes":["' + volumeName + ':/datas"]}'
-		response = requests.post(CONTAINERS, auth=(RANCHER_USER, RANCHER_PASS), data=data)
+		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test' + str(port) + '", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '", "dataVolumes":["' + volumeName + ':/datas"], "environment":{ "DOCKER_USER": "' + username + '", "DOCKER_PASS":"' + containerPassword + '" }}'
+		response = requests.post(settings.CONTAINERS, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
 		print(response.status_code)
+		jsonResponse = response.json()
+		container.rancherId = jsonResponse["id"]
+		container.save()
 		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', str(port), '-j', 'DNAT', '--to-destination', '192.168.0.1:' + str(port)])
 		subprocess.Popen(['iptables-save'])
 
@@ -125,7 +121,7 @@ def change(request):
 	print("in colkjd")
 	context = {}
 	if request.method == 'GET':
-		return render(request, 'containers/index.html', context)
+		return render(request, 'containers/change.html', context)
 
 	elif request.method == 'POST':
 		#print("post")
@@ -138,12 +134,19 @@ def change(request):
 		#print(container_id)
 		if (container.currentState == 0):
 			container.currentState = 1
+			URI = settings.CONTAINERS + "/" + container.rancherId + "?action=start"
+			response = requests.post(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
+			print(response.status_code)
 			container.save()
 			jsonMessage = {
 				'message' : '1'
 			}
 		elif (container.currentState == 1):
 			container.currentState = 0
+			data = '{"remove":"false", "timeout":10}'
+			URI = settings.CONTAINERS + "/" + container.rancherId + "?action=stop"
+			response = requests.post(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
+			print(response.status_code)
 			container.save()
 			jsonMessage = {
 				'message' : '1'
@@ -191,6 +194,11 @@ def delete(request):
 		container_id = receivedData["containerId"]
 		user = User.objects.get(username = username)
 		container = Container.objects.filter(user_id = user.id, id = container_id).delete()
+		URI = settings.CONTAINERS + "/" + container.rancherId
+		response = requests.delete(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
+		URI = setting.VOLUMES + "/" + container.volumeId
+		response = requests.delete(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
+		print(response.status_code)
 		jsonMessage = {
 				'message' : '1'
 			}
