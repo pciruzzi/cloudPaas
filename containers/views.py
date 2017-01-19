@@ -73,6 +73,7 @@ def create(request):
 
 	global RANCHER_USER
 	RANCHER_USER = "" # FILL ME
+	global RANCHER_PASS
 	RANCHER_PASS = ""
 
 	context = {}
@@ -113,6 +114,9 @@ def create(request):
 		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test' + str(port) + '", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '", "dataVolumes":["' + volumeName + ':/datas"]}'
 		response = requests.post(CONTAINERS, auth=(RANCHER_USER, RANCHER_PASS), data=data)
 		print(response.status_code)
+		jsonResponse = json.loads(request.body.decode("utf-8"))
+		container.rancherId = jsonResponse["id"]
+		container.save()
 		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', str(port), '-j', 'DNAT', '--to-destination', '192.168.0.1:' + str(port)])
 		subprocess.Popen(['iptables-save'])
 
@@ -144,6 +148,10 @@ def change(request):
 			}
 		elif (container.currentState == 1):
 			container.currentState = 0
+			data = '{"remove":"false", "timeout":10}'
+			URI = CONTAINERS + "/" + container.id + "?action=stop"
+			response = requests.post(URI, auth=(RANCHER_USER, RANCHER_PASS), data=data)
+			print(response.status_code)
 			container.save()
 			jsonMessage = {
 				'message' : '1'
