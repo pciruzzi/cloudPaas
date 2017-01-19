@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from containers.models import Container
 from django.contrib.auth.models import User
+from django.conf import settings
 
 import requests
 import json
@@ -58,24 +59,6 @@ def index(request):
 @csrf_exempt
 #@login_required
 def create(request):
-	BASE = "http://192.168.0.3:8083/"
-	global V1
-	V1 = BASE + "v1/"
-	global V2_BETA
-	V2_BETA = BASE + "v2-beta/"
-
-	global HOSTS
-	HOSTS = V1 + "hosts"
-	global CONTAINERS
-	CONTAINERS = V2_BETA + "projects/1a5/containers"
-	global VOLUMES
-	VOLUMES = V2_BETA + "projects/1a5/volumes"
-
-	global RANCHER_USER
-	RANCHER_USER = "" # FILL ME
-	global RANCHER_PASS
-	RANCHER_PASS = ""
-
 	context = {}
 
 	if request.method == 'GET':
@@ -107,12 +90,12 @@ def create(request):
 
 		# Volume creation
 		data = '{"description":"Description :)", "driver":"rancher-nfs", "name":"' + volumeName + '", "driverOpts": { }}'
-		response = requests.post(VOLUMES, auth=(RANCHER_USER, RANCHER_PASS), data=data)
+		response = requests.post(settings.VOLUMES, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
 		print(response.status_code)
 
 		# Container creation
 		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test' + str(port) + '", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '", "dataVolumes":["' + volumeName + ':/datas"]}'
-		response = requests.post(CONTAINERS, auth=(RANCHER_USER, RANCHER_PASS), data=data)
+		response = requests.post(settings.CONTAINERS, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
 		print(response.status_code)
 		jsonResponse = response.json()
 		container.rancherId = jsonResponse["id"]
@@ -129,7 +112,7 @@ def change(request):
 	print("in colkjd")
 	context = {}
 	if request.method == 'GET':
-		return render(request, 'containers/index.html', context)
+		return render(request, 'containers/change.html', context)
 
 	elif request.method == 'POST':
 		#print("post")
@@ -149,8 +132,8 @@ def change(request):
 		elif (container.currentState == 1):
 			container.currentState = 0
 			data = '{"remove":"false", "timeout":10}'
-			URI = CONTAINERS + "/" + container.id + "?action=stop"
-			response = requests.post(URI, auth=(RANCHER_USER, RANCHER_PASS), data=data)
+			URI = settings.CONTAINERS + "/" + container.rancherId + "?action=stop"
+			response = requests.post(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
 			print(response.status_code)
 			container.save()
 			jsonMessage = {
