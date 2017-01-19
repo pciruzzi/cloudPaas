@@ -19,3 +19,4 @@ class Container(models.Model):
 	containerName = models.CharField(max_length=250, default='Container')
 	containerAddress = models.CharField(max_length=250, default='test')
 	rancherId = models.CharField(max_length=50, default='')
+	volumeId = models.CharField(max_length=50, default='')

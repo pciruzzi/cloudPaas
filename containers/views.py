@@ -98,6 +98,8 @@ def create(request):
 		# Volume creation
 		data = '{"description":"Description :)", "driver":"rancher-nfs", "name":"' + volumeName + '", "driverOpts": { }}'
 		response = requests.post(settings.VOLUMES, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
+		jsonResponse = response.json()
+		container.volumeId = jsonResponse["id"]
 		print(response.status_code)
 
 		# Container creation
@@ -193,6 +195,8 @@ def delete(request):
 		user = User.objects.get(username = username)
 		container = Container.objects.filter(user_id = user.id, id = container_id).delete()
 		URI = settings.CONTAINERS + "/" + container.rancherId
+		response = requests.delete(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
+		URI = setting.VOLUMES + "/" + container.volumeId
 		response = requests.delete(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
 		print(response.status_code)
 		jsonMessage = {
