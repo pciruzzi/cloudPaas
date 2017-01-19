@@ -78,7 +78,28 @@ def create(request):
 	context = {}
 
 	if request.method == 'GET':
-		port = 8094
+		return render(request, 'containers/create.html', context)
+
+	elif request.method == 'POST':
+		print("This is a POST")
+		receivedData = json.loads(request.body.decode("utf-8"))
+		username = receivedData["username"]
+		print(username)
+		containerType = receivedData["type"]
+		containerName = receivedData["name"]
+		print("before user get")
+		user = User.objects.get(username = username)
+		print(user)
+
+		container = Container(user_id=user.id, containerType=containerType, 
+			containerName=containerName)
+		container.save()
+		jsonMessage = {
+				'message' : '1'
+			}
+
+
+		port = 8090 + container.id
 		volumeName = "VolumeApi" + str(port)
 		requestedHost = "1h5"
 		imageId = "pciruzzi/paasinsa1617"
@@ -94,24 +115,8 @@ def create(request):
 		print(response.status_code)
 		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', str(port), '-j', 'DNAT', '--to-destination', '192.168.0.1:' + str(port)])
 		subprocess.Popen(['iptables-save'])
-		return render(request, 'containers/create.html', context)
 
-	elif request.method == 'POST':
-		print("This is a POST")
-		receivedData = json.loads(request.body.decode("utf-8"))
-		username = receivedData["username"]
-		print(username)
-		containerType = receivedData["type"]
-		containerName = receivedData["name"]
-		print("before user get")
-		user = User.objects.get(username = username)
-		print(user)
-		container = Container(user_id=user.id, containerType=containerType, 
-			containerName=containerName)
-		container.save()
-		jsonMessage = {
-				'message' : '1'
-			}
+
 		return JsonResponse(jsonMessage)
 
 @csrf_exempt
