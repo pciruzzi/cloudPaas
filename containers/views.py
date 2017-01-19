@@ -11,6 +11,7 @@ import requests
 import json
 import sys
 import subprocess
+import hashlib
 
 @csrf_exempt
 #@login_required
@@ -78,9 +79,6 @@ def create(request):
 		container = Container(user_id=user.id, containerType=containerType, 
 			containerName=containerName)
 		container.save()
-		jsonMessage = {
-				'message' : '1'
-			}
 
 
 		port = 8090 + container.id
@@ -88,13 +86,22 @@ def create(request):
 		requestedHost = "1h5"
 		imageId = "pciruzzi/paasinsa1617"
 
+		hash_object = hashlib.sha1(str(port))
+		containerPassword = hash_object.hexdigest()
+		containerPassword = containerPassword[:8]
+
+		jsonMessage = {
+				'message' : '1',
+				'password' : containerPassword
+			}
+
 		# Volume creation
 		data = '{"description":"Description :)", "driver":"rancher-nfs", "name":"' + volumeName + '", "driverOpts": { }}'
 		response = requests.post(settings.VOLUMES, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
 		print(response.status_code)
 
 		# Container creation
-		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test' + str(port) + '", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '", "dataVolumes":["' + volumeName + ':/datas"]}'
+		data = '{"description":"Une description", "imageUuid":"docker:' + imageId + '", "name":"api-test' + str(port) + '", "ports":["' + str(port) + ':3000/tcp"], "requestedHostId":"' + requestedHost + '", "dataVolumes":["' + volumeName + ':/datas"], "environment":{ "DOCKER_USER": "' + username + '", "DOCKER_PASS":"' + containerPassword + '" }}'
 		response = requests.post(settings.CONTAINERS, auth=(settings.RANCHER_USER, settings.RANCHER_PASS), data=data)
 		print(response.status_code)
 		jsonResponse = response.json()
