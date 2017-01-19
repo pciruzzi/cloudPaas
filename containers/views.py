@@ -192,6 +192,9 @@ def delete(request):
 		container_id = receivedData["containerId"]
 		user = User.objects.get(username = username)
 		container = Container.objects.filter(user_id = user.id, id = container_id).delete()
+		URI = settings.CONTAINERS + "/" + container.rancherId
+		response = requests.delete(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
+		print(response.status_code)
 		jsonMessage = {
 				'message' : '1'
 			}
