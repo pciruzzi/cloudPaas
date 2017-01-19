@@ -86,7 +86,7 @@ def create(request):
 		requestedHost = "1h5"
 		imageId = "pciruzzi/paasinsa1617"
 
-		hash_object = hashlib.sha1(str(port))
+		hash_object = hashlib.sha224(str(port).encode())
 		containerPassword = hash_object.hexdigest()
 		containerPassword = containerPassword[:8]
 
@@ -193,12 +193,14 @@ def delete(request):
 		username = receivedData["username"]
 		container_id = receivedData["containerId"]
 		user = User.objects.get(username = username)
-		container = Container.objects.filter(user_id = user.id, id = container_id).delete()
+		container = Container.objects.get(user_id = user.id, id = container_id)
 		URI = settings.CONTAINERS + "/" + container.rancherId
 		response = requests.delete(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
-		URI = setting.VOLUMES + "/" + container.volumeId
+		URI = settings.VOLUMES + "/" + container.volumeId
+		print(URI)
 		response = requests.delete(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
 		print(response.status_code)
+		container.delete()
 		jsonMessage = {
 				'message' : '1'
 			}
