@@ -125,6 +125,9 @@ def change(request):
 		#print(container_id)
 		if (container.currentState == 0):
 			container.currentState = 1
+			URI = settings.CONTAINERS + "/" + container.rancherId + "?action=start"
+			response = requests.post(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
+			print(response.status_code)
 			container.save()
 			jsonMessage = {
 				'message' : '1'
