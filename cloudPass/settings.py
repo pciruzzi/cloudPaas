@@ -125,6 +125,15 @@ STATIC_URL = '/static/'
 
 LOGIN_URL = '/authentication/login/'
 
+CRON_CLASSES = [
+    "containers.cron.Monitoring",
+]
+
+CRONJOBS = [
+    ('*/5 * * * *', 'containers.Monitoring.Monitoring')
+]
+
+
 
 BASE = "http://192.168.0.3:8083/"
 V1 = BASE + "v1/"
