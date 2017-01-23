@@ -12,6 +12,7 @@ import json
 import sys
 import subprocess
 import hashlib
+import random
 
 @csrf_exempt
 #@login_required
@@ -83,7 +84,31 @@ def create(request):
 
 		port = 8090 + container.id
 		volumeName = "VolumeApi" + str(port)
-		requestedHost = "1h5"
+
+		# Choosing the host
+		response = requests.get(settings.HOSTS, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
+		jsonData = response.json()["data"]
+		requestedHost = None
+		bestResult = 999999
+		for x in xrange(0,len(jsonData)):
+			id = jsonData[x]["id"]
+			infos = jsonData[x]["info"]
+			memAvailable = infos["memoryInfo"]["memAvailable"]
+			memTotal =  infos["memoryInfo"]["memTotal"]
+			percentageMem = 100.0 * memAvailable / memTotal
+			percentageDisk = infos["diskInfo"]["mountPoints"]["/dev/sda1"]["percentage"]
+			cpuPercentages = infos["cpuInfo"]["cpuCoresPercentages"]
+			percentageCpu = 0
+			for y in xrange(0, len(cpuPercentages)):
+				percentageCpu += cpuPercentages[y]
+			percentageCpu = 1.0 * percentageCpu / len(cpuPercentages)
+			result = percentageMem + percentageCpu + percentageDisk
+			if ((result < bestResult) and (percentageMem < 80) and (percentageDisk < 80) and (percentageCpu < 80)):
+				bestResult = result
+				requestedHost = id
+		# A good host hasn't been found
+		if (requestedHost == None):
+			requestedHost = jsonData[random.randint(0, len(jsonData) - 1)]["id"]
 
 		if (containerType == "C Platform"):
 		    print("C platform")
