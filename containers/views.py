@@ -42,11 +42,14 @@ def index(request):
 		containersJson = []
 
 		for c in containers:
+			port = 8090 + c.id
+			link = "http://213.32.27.235:" + str(port)
 			actualContainer = {
 				'id' : c.id,
 				'name' : c.containerName,
 				'type' : c.containerType,
 				'state' : c.currentState,
+				'containerLink' : link
 			}
 			print(actualContainer)
 			containersJson.append(actualContainer)
