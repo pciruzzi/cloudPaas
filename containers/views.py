@@ -93,8 +93,8 @@ def create(request):
 		jsonData = response.json()["data"]
 		requestedHost = None
 		bestResult = 999999
-		for x in xrange(0,len(jsonData)):
-			id = jsonData[x]["id"]
+		ipAddress = None
+		for x in range(0, len(jsonData)) :
 			infos = jsonData[x]["info"]
 			memAvailable = infos["memoryInfo"]["memAvailable"]
 			memTotal =  infos["memoryInfo"]["memTotal"]
@@ -102,16 +102,19 @@ def create(request):
 			percentageDisk = infos["diskInfo"]["mountPoints"]["/dev/sda1"]["percentage"]
 			cpuPercentages = infos["cpuInfo"]["cpuCoresPercentages"]
 			percentageCpu = 0
-			for y in xrange(0, len(cpuPercentages)):
+			for y in range(0, len(cpuPercentages)):
 				percentageCpu += cpuPercentages[y]
 			percentageCpu = 1.0 * percentageCpu / len(cpuPercentages)
 			result = percentageMem + percentageCpu + percentageDisk
 			if ((result < bestResult) and (percentageMem < 80) and (percentageDisk < 80) and (percentageCpu < 80)):
 				bestResult = result
-				requestedHost = id
+				requestedHost = jsonData[x]["id"]
+				ipAddress = jsonData[x]["publicEndpoints"][0]["ipAddress"]
 		# A good host hasn't been found
 		if (requestedHost == None):
-			requestedHost = jsonData[random.randint(0, len(jsonData) - 1)]["id"]
+			rand = random.randint(0, len(jsonData) - 1)
+			requestedHost = jsonData[rand]["id"]
+			ipAddress = jsonData[rand]["agentIpAddress"]
 
 		if (containerType == "C Platform"):
 		    print("C platform")
@@ -151,7 +154,7 @@ def create(request):
 		jsonResponse = response.json()
 		container.rancherId = jsonResponse["id"]
 		container.save()
-		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', str(port), '-j', 'DNAT', '--to-destination', '192.168.0.1:' + str(port)])
+		subprocess.Popen(['iptables', '-t', 'nat', '-A', 'PREROUTING', '-p', 'tcp', '--dport', str(port), '-j', 'DNAT', '--to-destination', ipAddress + ':' + str(port)])
 		subprocess.Popen(['iptables-save'])
 
 
