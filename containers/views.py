@@ -112,24 +112,26 @@ def create(request):
 
 		if (containerType == "C Platform"):
 		    print("C platform")
-		    imageId = "pciruzzi/paasinsa1617"
+		    imageId = "paasinsa1617/cimage"
 		elif (containerType == "Java Platform"):
 		    print("Java platform")
-		    imageId = "pciruzzi/paasinsa1617"
+		    imageId = "paasinsa1617/javaeeimage"
 		elif (containerType == "Big data Platform"):
 		    print("Big data platform")	
-		    imageId = "pciruzzi/paasinsa1617"
+		    imageId = "paasinsa1617/bigdataimage"
 		elif (containerType == "Web Development"):
 		    print("Web development") 
-		    imageId = "pciruzzi/paasinsa1617"
+		    imageId = "paasinsa1617/webdevimage"
 		
 		hash_object = hashlib.sha224(str(port).encode())
 		containerPassword = hash_object.hexdigest()
 		containerPassword = containerPassword[:8]
+		link = "213.32.27.235:" + str(port)
 
 		jsonMessage = {
 				'message' : '1',
-				'password' : containerPassword
+				'password' : containerPassword,
+				'containerLink' : link,
 			}
 
 		# Volume creation
