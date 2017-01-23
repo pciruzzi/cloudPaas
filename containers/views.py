@@ -84,8 +84,20 @@ def create(request):
 		port = 8090 + container.id
 		volumeName = "VolumeApi" + str(port)
 		requestedHost = "1h5"
-		imageId = "pciruzzi/paasinsa1617"
 
+		if (containerType == "C Platform"):
+		    print("C platform")
+		    imageId = "pciruzzi/paasinsa1617"
+		elif (containerType == "Java Platform"):
+		    print("Java platform")
+		    imageId = "pciruzzi/paasinsa1617"
+		elif (containerType == "Big data Platform"):
+		    print("Big data platform")	
+		    imageId = "pciruzzi/paasinsa1617"
+		elif (containerType == "Web Development"):
+		    print("Web development") 
+		    imageId = "pciruzzi/paasinsa1617"
+		
 		hash_object = hashlib.sha224(str(port).encode())
 		containerPassword = hash_object.hexdigest()
 		containerPassword = containerPassword[:8]
@@ -136,10 +148,13 @@ def change(request):
 			container.currentState = 1
 			URI = settings.CONTAINERS + "/" + container.rancherId + "?action=start"
 			response = requests.post(URI, auth=(settings.RANCHER_USER, settings.RANCHER_PASS))
+			port = 8090 + container.id
+			link = "http://213.32.27.235:" + str(port)
 			print(response.status_code)
 			container.save()
 			jsonMessage = {
-				'message' : '1'
+				'message' : '1',
+				'containerLink': link,
 			}
 		elif (container.currentState == 1):
 			container.currentState = 0
